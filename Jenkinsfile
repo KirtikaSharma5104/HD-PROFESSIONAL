@@ -1,31 +1,42 @@
 pipeline {
     agent any
-
+    environment {
+        NODE_HOME = tool name: 'NodeJS', type: 'NodeJS' // Ensure NodeJS is configured in Jenkins
+    }
     stages {
-        stage('Checkout') {
+        stage('Install Dependencies') {
             steps {
-                // Clone the repository
-                git url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL.git', branch: 'main'
+                script {
+                    sh 'npm install'
+                }
             }
         }
         stage('Build') {
             steps {
-                // Build the React application
-                bat 'npm install'
-                bat 'npm run build'
+                script {
+                    sh 'npm run build'
+                }
             }
         }
         stage('Test') {
             steps {
-                // Run tests
-                bat 'npm test'
+                script {
+                    sh 'npm run test -- --watchAll=false'
+                }
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying the application...'
-                // Add your deployment steps here
+                script {
+                    // Example: Deploy the build to a server
+                    sh 'scp -r build/ user@your-server:/path/to/deploy/'
+                }
             }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
         }
     }
 }

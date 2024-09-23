@@ -1,11 +1,6 @@
 pipeline {
     agent any
-    environment {
-        NODE_HOME = tool name: 'NodeJS', type: 'NodeJS'  // Ensure NodeJS is configured in Jenkins
-    }
-
     stages {
-        // Stage 1: Install Dependencies
         stage('Install Dependencies') {
             steps {
                 script {
@@ -13,8 +8,6 @@ pipeline {
                 }
             }
         }
-
-        // Stage 2: Build the React app
         stage('Build') {
             steps {
                 script {
@@ -22,8 +15,6 @@ pipeline {
                 }
             }
         }
-
-        // Stage 3: Test the React app
         stage('Test') {
             steps {
                 script {
@@ -31,23 +22,18 @@ pipeline {
                 }
             }
         }
-
-        // Stage 4: Deploy the build (if applicable)
         stage('Deploy') {
             steps {
                 script {
-                    // Add deployment logic here, such as copying files to a server
-                    bat 'echo Deploying...'
+                    // Copy built files to the local directory you just created
+                    bat 'xcopy /E /I build\\* C:\\local-deployment\\'
                 }
             }
         }
     }
-
     post {
         always {
-            node {
-                archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true  // Ensure this step is inside a node block
-            }
+            archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
         }
     }
 }

@@ -45,7 +45,9 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
+            node {
+                archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true  // Ensure this step is inside a node block
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "react-app-image" // Name of your Docker image
+    tools {
+        nodejs 'NodeJS' // This should be configured in Jenkins under Manage Jenkins -> Global Tool Configuration
     }
 
     stages {
@@ -12,69 +12,43 @@ pipeline {
                 git url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL.git', branch: 'main'
             }
         }
-
         stage('Build') {
             steps {
-                script {
-                    // Install dependencies and build the React application
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
+                // Install dependencies and build the project
+                bat 'npm install'
+                bat 'npm run build'
             }
         }
-
         stage('Test') {
             steps {
-                script {
-                    // Run tests
-                    sh 'npm test'
-                }
+                // Run tests
+                bat 'npm test'
             }
         }
-
         stage('Docker Build') {
             steps {
-                script {
-                    // Build the Docker image for the React application
-                    sh "docker build -t ${DOCKER_IMAGE} ."
-                }
+                // Build Docker image
+                bat 'docker build -t react-app-image .'
             }
         }
-
         stage('Run Docker Container') {
             steps {
-                script {
-                    // Run the Docker container in detached mode
-                    sh "docker run -d -p 80:80 --name react-app-container ${DOCKER_IMAGE}"
-                }
+                // Run Docker container
+                bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
             }
         }
-
         stage('Deploy') {
             steps {
-                script {
-                    // Add your deployment steps here if needed
-                    echo 'Application deployed successfully.'
-                }
+                echo 'Deploying the application...'
+                // Add your deployment steps here if needed
             }
         }
     }
-
     post {
         always {
-            script {
-                // Cleanup - Stop and remove the Docker container if it exists
-                sh '''
-                    docker stop react-app-container || true
-                    docker rm react-app-container || true
-                '''
-            }
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
+            // Cleanup: Stop and remove the Docker container
+            bat 'docker stop react-app-container || true'
+            bat 'docker rm react-app-container || true'
         }
     }
 }

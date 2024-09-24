@@ -1,93 +1,80 @@
 pipeline {
     agent any
-    
-    tools {
-        nodejs 'node' // Ensure NodeJS tool is configured in Jenkins with this name
-    }
-    
+
     environment {
-        NODE_OPTIONS = '--openssl-legacy-provider' // Set legacy provider for Node.js versions >= 17
+        DOCKER_IMAGE = "react-app-image" // Name of your Docker image
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository from GitHub
+                // Clone the repository
                 git url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL.git', branch: 'main'
             }
         }
-        
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    // Install npm dependencies
-                    bat 'npm install' // Use 'bat' for Windows, 'sh' for Unix/MacOS
-                }
-            }
-        }
-        
+
         stage('Build') {
             steps {
                 script {
-                    // Build the application
-                    bat 'npm run build'
+                    // Install dependencies and build the React application
+                    sh 'npm install'
+                    sh 'npm run build'
                 }
             }
         }
-        
+
         stage('Test') {
             steps {
                 script {
                     // Run tests
-                    bat 'npm test -- --watchAll=false'
+                    sh 'npm test'
                 }
             }
         }
-        
-        stage('Code Quality Analysis') {
+
+        stage('Docker Build') {
             steps {
                 script {
-                    // Example: Running ESLint for code quality checks
-                    bat 'npx eslint . --ext .js,.jsx' // Adjust this command based on your code quality tool
+                    // Build the Docker image for the React application
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
         }
-        
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Run the Docker container in detached mode
+                    sh "docker run -d -p 80:80 --name react-app-container ${DOCKER_IMAGE}"
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 script {
-                    // Example: Copy built files to a local directory for testing
-                    bat 'if not exist C:\\local-deployment mkdir C:\\local-deployment'
-                    bat 'xcopy /E /I /Y build\\* C:\\local-deployment\\'
+                    // Add your deployment steps here if needed
+                    echo 'Application deployed successfully.'
                 }
             }
         }
-        
-        stage('Release') {
-            steps {
-                echo 'Releasing to production...'
-                // Add your production deployment steps here
-            }
-        }
-        
-        stage('Monitoring and Alerting') {
-            steps {
-                echo 'Setting up monitoring and alerting...'
-                // Add monitoring setup steps, e.g., integrating with Datadog or New Relic
-            }
-        }
     }
-    
+
     post {
         always {
-            // Archive the build artifacts
-            archiveArtifacts artifacts: 'build/**', allowEmptyArchive: true
+            script {
+                // Cleanup - Stop and remove the Docker container if it exists
+                sh '''
+                    docker stop react-app-container || true
+                    docker rm react-app-container || true
+                '''
+            }
         }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Please check the logs for more details.'
+            echo 'Pipeline failed!'
         }
     }
 }

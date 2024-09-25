@@ -17,53 +17,32 @@ pipeline {
         stage('Build') {
             steps {
                 bat 'npm run build'
-                bat 'docker build -t react-app-image .' // Build Docker image
+                archiveArtifacts artifacts: 'build/', allowEmptyArchive: true
             }
         }
 
         stage('Test') {
             steps {
-                bat 'npm test -- --watchAll=false' // Ensure tests run once
+                bat 'npm test -- --watchAll=false' // Disabling interactive watch mode for CI/CD
             }
         }
 
         stage('Code Quality Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'codeclimate-test-reporter-id', variable: 'CC_TEST_REPORTER_ID')]) {
-                    bat 'docker run --rm -v C:/ProgramData/Jenkins/.jenkins/workspace/React-App-Pipeline:/code codeclimate/codeclimate analyze'
-                }
+                bat 'docker run --rm -v ${WORKSPACE}:/code codeclimate/codeclimate analyze'
             }
         }
 
-       stage('Deploy') {
-       steps {
-        // Stop and remove the container if it's already running
-        bat 'docker stop react-app-container || true'
-        bat 'docker rm react-app-container || true'
-        
-        // Run the new Docker container
-        bat 'docker run -d -p 8080:80 --name react-app-container react-app-image'
-    }
-}
-
-        stage('Release') {
+        stage('Deploy') {
             steps {
-                bat 'echo "Promoting to production..."' // Placeholder for production release
-                // Add commands for production release, if applicable
-            }
-        }
-
-        stage('Monitoring') {
-            steps {
-                bat 'echo "Monitoring in production..."' // Placeholder for monitoring tool
-                // Add integration with Datadog, New Relic, or any monitoring tool here
+                bat 'echo "Deploying to Test Environment..."'
             }
         }
     }
 
     post {
         always {
-            cleanWs() // Clean workspace after each build
+            cleanWs()
         }
         success {
             echo 'Pipeline completed successfully.'

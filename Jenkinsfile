@@ -23,7 +23,9 @@ pipeline {
                 bat 'START /B npm run start'
                 
                 // Sleep to give the app time to fully start
-                bat 'timeout /t 10'
+                bat 'timeout /t 30'
+
+                bat 'curl http://localhost:3000 || echo "Server not running!"'
                 
                 // Run Puppeteer tests
                 bat 'npm run puppeteer-test' // Defined in your package.json

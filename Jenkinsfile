@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        CC_TEST_REPORTER_ID = credentials('codeclimate-test-reporter-id')
+        CC_TEST_REPORTER_ID = credentials('codeclimate-test-reporter-id') // Ensure this exists in Jenkins credentials
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL'
+                git branch: 'main', url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL.git'
             }
         }
 
@@ -52,7 +52,9 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            node { // Ensure cleanWs is inside a node block
+                cleanWs() // Cleans workspace
+            }
         }
         success {
             echo 'Pipeline completed successfully.'

@@ -2,53 +2,54 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS' // This should be configured in Jenkins under Manage Jenkins -> Global Tool Configuration
+        nodejs 'NodeJS' // Ensure this matches the name given in Global Tool Configuration in Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository
                 git url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL.git', branch: 'main'
             }
         }
         stage('Build') {
             steps {
-                // Install dependencies and build the project
                 bat 'npm install'
                 bat 'npm run build'
             }
         }
         stage('Test') {
             steps {
-                // Run tests
-                bat 'npm test'
+                // Start the app in the background on a specific port
+                bat 'START /B npm run start'
+                // Sleep to allow the server to start up properly
+                bat 'timeout /t 10'
+                // Run Puppeteer tests
+                bat 'node src/puppeteerTest.js'
             }
         }
         stage('Docker Build') {
             steps {
-                // Build Docker image
                 bat 'docker build -t react-app-image .'
             }
         }
         stage('Run Docker Container') {
             steps {
-                // Run Docker container
                 bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
             }
         }
         stage('Deploy') {
             steps {
                 echo 'Deploying the application...'
-                // Add your deployment steps here if needed
             }
         }
     }
     post {
         always {
-            // Cleanup: Stop and remove the Docker container
+            // Cleanup
             bat 'docker stop react-app-container || true'
             bat 'docker rm react-app-container || true'
+            // Ensure to kill Node.js server process if needed
+            bat 'taskkill /IM node.exe /F || true'
         }
     }
 }

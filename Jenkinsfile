@@ -13,18 +13,16 @@ pipeline {
         }
         stage('Build') {
             steps {
-                bat 'npm install'
+                bat 'npm install --also=dev'
                 bat 'npm run build'
             }
         }
         stage('Test') {
             steps {
-                // Start the app in the background on a specific port
                 bat 'START /B npm run start'
-                // Use ping to simulate a delay instead of timeout
                 bat 'ping 127.0.0.1 -n 30 > nul'
-                // Run Puppeteer tests
-                bat 'node src/puppeteerTest.js'
+                bat 'npm list puppeteer'  // This checks if Puppeteer is installed
+                bat 'node src/puppeteerTest.js' 
             }
         }
         stage('Docker Build') {
@@ -50,6 +48,7 @@ pipeline {
             bat 'docker rm react-app-container || true'
             // Ensure to kill Node.js server process if needed
             bat 'taskkill /IM node.exe /F || true'
+            cleanWs()  // Clean workspace after each build
         }
     }
 }

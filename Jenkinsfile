@@ -30,13 +30,14 @@ pipeline {
         stage('Code Quality Analysis') {
             steps {
                 script {
-                    // Use Docker via TCP to run the CodeClimate analysis
+                    // Ensure Docker is using TCP to connect, and pass the correct absolute path
                     bat '''
-                    docker -H tcp://localhost:2375 run --rm -v "${WORKSPACE}:/code" codeclimate/codeclimate analyze
+                    docker -H tcp://localhost:2375 run --rm -v "%WORKSPACE%:/code" codeclimate/codeclimate analyze
                     '''
                 }
             }
-        }
+          }
+
 
         stage('Deploy') {
             steps {

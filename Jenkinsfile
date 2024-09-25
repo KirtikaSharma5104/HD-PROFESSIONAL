@@ -35,11 +35,16 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                bat 'docker run -d -p 80:80 --name react-app-container react-app-image' // Deploy the app
-            }
-        }
+       stage('Deploy') {
+       steps {
+        // Stop and remove the container if it's already running
+        bat 'docker stop react-app-container || true'
+        bat 'docker rm react-app-container || true'
+        
+        // Run the new Docker container
+        bat 'docker run -d -p 8080:80 --name react-app-container react-app-image'
+    }
+}
 
         stage('Release') {
             steps {

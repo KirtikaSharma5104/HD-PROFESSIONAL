@@ -21,7 +21,6 @@ pipeline {
             }
         }
 
-        
         stage('Test') {
             steps {
                 bat 'npm test -- --watchAll=false --passWithNoTests'
@@ -29,17 +28,15 @@ pipeline {
         }
 
         stage('Code Quality Analysis') {
-    steps {
-        script {
-            // Use Docker via TCP to run the CodeClimate analysis
-            bat '''
-            docker -H tcp://localhost:2375 run --rm -v "%cd%:/code" codeclimate/codeclimate analyze
-            '''
+            steps {
+                script {
+                    // Use Docker via TCP to run the CodeClimate analysis
+                    bat '''
+                    docker -H tcp://localhost:2375 run --rm -v "${WORKSPACE}:/code" codeclimate/codeclimate analyze
+                    '''
+                }
+            }
         }
-    }
-}
-
-
 
         stage('Deploy') {
             steps {

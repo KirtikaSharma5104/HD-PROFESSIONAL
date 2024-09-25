@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        CC_TEST_REPORTER_ID = credentials('codeclimate-test-reporter-id') // Ensure this exists in Jenkins credentials
+        CC_TEST_REPORTER_ID = credentials('codeclimate-test-reporter-id')
     }
 
     stages {
@@ -31,30 +31,30 @@ pipeline {
             }
         }
 
-        stage('Code Quality Analysis') {
+        stage('Docker Build') {
             steps {
-                withCredentials([string(credentialsId: 'codeclimate-test-reporter-id', variable: 'CC_TEST_REPORTER_ID')]) {
-                    script {
-                        bat """
-                        docker run --rm -v "C:/ProgramData/Jenkins/.jenkins/workspace/React-App-Pipeline:/code" codeclimate/codeclimate analyze
-                        """
-                    }
-                }
+                bat 'docker build -t react-app-image .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
             }
         }
 
         stage('Deploy') {
             steps {
-                bat 'echo "Deploying to Test Environment..."'
+                echo 'Deploying the application...'
             }
         }
     }
 
     post {
         always {
-            node { 
-                cleanWs() 
-            }
+            bat 'docker stop react-app-container || true'
+            bat 'docker rm react-app-container || true'
+            cleanWs()
         }
         success {
             echo 'Pipeline completed successfully.'

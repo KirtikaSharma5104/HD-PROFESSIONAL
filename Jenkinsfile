@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        CC_TEST_REPORTER_ID = credentials('codeclimate-test-reporter-id')
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -20,8 +16,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'set CI=false && npm run build'
-                archiveArtifacts artifacts: 'build/', allowEmptyArchive: true
+                bat 'npm run build'
             }
         }
 
@@ -31,29 +26,16 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                bat 'docker build -t react-app-image .'
-            }
-        }
-
-        stage('Run Docker Container') {
-            steps {
-                bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
-            }
-        }
-
         stage('Deploy') {
             steps {
-                echo 'Deploying the application...'
+                echo 'Deploying to environment...'
             }
         }
     }
 
     post {
         always {
-            bat 'docker stop react-app-container || true'
-            bat 'docker rm react-app-container || true'
+            echo 'Cleaning workspace...'
             cleanWs()
         }
         success {

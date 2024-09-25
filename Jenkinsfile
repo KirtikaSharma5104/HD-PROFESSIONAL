@@ -17,20 +17,22 @@ pipeline {
                 bat 'npm run build'
             }
         }
-        stage('Test') {
-            steps {
-                // Start the app in the background
-                bat 'START /B npm run start'
-                
-                // Sleep to give the app time to fully start
-                bat 'timeout /t 30'
+       stage('Test') {
+    steps {
+        // Start the app in the background
+        bat 'START /B npm run start'
+        
+        // Use ping as a delay workaround (pinging localhost 30 times, 1 second per ping)
+        bat 'ping 127.0.0.1 -n 30 > nul'
 
-                bat 'curl http://localhost:3000 || echo "Server not running!"'
-                
-                // Run Puppeteer tests
-                bat 'npm run puppeteer-test' // Defined in your package.json
-            }
-        }
+        // Check if the server is running before running the tests
+        bat 'curl http://localhost:3000 || echo "Server not running!"'
+        
+        // Run Puppeteer tests
+        bat 'npm run puppeteer-test'
+    }
+}
+
         stage('Docker Build') {
             steps {
                 // Build a Docker image for the app

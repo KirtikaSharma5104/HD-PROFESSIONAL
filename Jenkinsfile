@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                bat 'npm install --also=dev'
+                bat 'npm install --include=dev'
                 bat 'npm run build'
             }
         }

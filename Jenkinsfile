@@ -13,26 +13,23 @@ pipeline {
         }
         stage('Build') {
             steps {
-                bat 'npm install --include=dev'
-                bat 'npm run build'
+                bat 'npm install --include=dev'  // Install all dependencies including devDependencies
+                bat 'npm run build'  // Build the React app
             }
         }
         stage('Test') {
             steps {
-                bat 'START /B npm run start'
-                bat 'ping 127.0.0.1 -n 30 > nul'
-                bat 'npm list puppeteer'  // This checks if Puppeteer is installed
-                bat 'node src/puppeteerTest.js' 
+                bat 'npm test'  // Run the test script in package.json
             }
         }
         stage('Docker Build') {
             steps {
-                bat 'docker build -t react-app-image .'
+                bat 'docker build -t react-app-image .'  // Build Docker image
             }
         }
         stage('Run Docker Container') {
             steps {
-                bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
+                bat 'docker run -d -p 80:80 --name react-app-container react-app-image'  // Run Docker container
             }
         }
         stage('Deploy') {
@@ -41,14 +38,14 @@ pipeline {
             }
         }
     }
+
     post {
         always {
-            // Cleanup
-            bat 'docker stop react-app-container || true'
-            bat 'docker rm react-app-container || true'
+            // Check if the container exists before stopping it
+            bat 'docker ps -a | findstr react-app-container && docker stop react-app-container || echo "Container not found"'
+            bat 'docker ps -a | findstr react-app-container && docker rm react-app-container || echo "Container not found"'
             // Ensure to kill Node.js server process if needed
             bat 'taskkill /IM node.exe /F || true'
-            cleanWs()  // Clean workspace after each build
         }
     }
 }

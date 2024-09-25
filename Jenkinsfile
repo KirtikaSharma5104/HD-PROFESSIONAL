@@ -29,18 +29,16 @@ pipeline {
         }
 
         stage('Code Quality Analysis') {
-        steps {
+    steps {
         script {
-            // Run CodeClimate analysis in Docker
+            // Use Docker via TCP to run the CodeClimate analysis
             bat '''
-            docker run --rm \
-                -v "%WORKSPACE%:/code" \
-                -e CODECLIMATE_CODE="$WORKSPACE" \
-                codeclimate/codeclimate analyze
+            docker -H tcp://localhost:2375 run --rm -v "%cd%:/code" codeclimate/codeclimate analyze
             '''
         }
     }
 }
+
 
 
         stage('Deploy') {

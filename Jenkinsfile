@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS' // Ensure this matches the name given in Global Tool Configuration in Jenkins
+        nodejs 'NodeJS' // Ensure this matches the name in Jenkins' Global Tool Configuration
     }
 
     stages {
@@ -19,21 +19,25 @@ pipeline {
         }
         stage('Test') {
             steps {
-                // Start the app in the background on a specific port
+                // Start the app in the background
                 bat 'START /B npm run start'
-                // Sleep to allow the server to start up properly
+                
+                // Sleep to give the app time to fully start
                 bat 'timeout /t 10'
+                
                 // Run Puppeteer tests
-                bat 'node src/puppeteerTest.js'
+                bat 'npm run puppeteer-test' // Defined in your package.json
             }
         }
         stage('Docker Build') {
             steps {
+                // Build a Docker image for the app
                 bat 'docker build -t react-app-image .'
             }
         }
         stage('Run Docker Container') {
             steps {
+                // Run the Docker container
                 bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
             }
         }
@@ -43,13 +47,16 @@ pipeline {
             }
         }
     }
+
     post {
         always {
-            // Cleanup
+            // Clean up the Docker container
             bat 'docker stop react-app-container || true'
             bat 'docker rm react-app-container || true'
-            // Ensure to kill Node.js server process if needed
+            
+            // Clean up Node.js server
             bat 'taskkill /IM node.exe /F || true'
         }
     }
 }
+

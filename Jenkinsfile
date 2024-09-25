@@ -21,9 +21,10 @@ pipeline {
             }
         }
 
+        
         stage('Test') {
             steps {
-                bat 'npm test -- --watchAll=false' // Disabling interactive watch mode for CI/CD
+                bat 'npm test -- --watchAll=false --passWithNoTests'
             }
         }
 

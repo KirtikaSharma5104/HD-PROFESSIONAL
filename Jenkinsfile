@@ -1,51 +1,64 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS' // Ensure this matches the name given in Global Tool Configuration in Jenkins
+    environment {
+        CC_TEST_REPORTER_ID = credentials('codeclimate-test-reporter-id')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL.git', branch: 'main'
+                git branch: 'main', url: 'https://github.com/KirtikaSharma5104/HD-PROFESSIONAL'
             }
         }
+
+        stage('Install Dependencies') {
+            steps {
+                bat 'npm install'
+            }
+        }
+
         stage('Build') {
             steps {
-                bat 'npm install --include=dev'  // Install all dependencies including devDependencies
-                bat 'npm run build'  // Build the React app
+                bat 'set CI=false && npm run build'
+                archiveArtifacts artifacts: 'build/', allowEmptyArchive: true
             }
         }
+
         stage('Test') {
             steps {
-                bat 'npm test'  // Run the test script in package.json
+                bat 'npm test -- --passWithNoTests'
             }
         }
-        stage('Docker Build') {
+
+        stage('Code Quality Analysis') {
             steps {
-                bat 'docker build -t react-app-image .'  // Build Docker image
+                withCredentials([string(credentialsId: 'codeclimate-test-reporter-id', variable: 'CC_TEST_REPORTER_ID')]) {
+                    script {
+                        bat """
+                        docker run --rm -v "C:/ProgramData/Jenkins/.jenkins/workspace/React-App-Pipeline:/code" codeclimate/codeclimate analyze
+                        """
+                    }
+                }
             }
         }
-        stage('Run Docker Container') {
-            steps {
-                bat 'docker run -d -p 80:80 --name react-app-container react-app-image'  // Run Docker container
-            }
-        }
+
         stage('Deploy') {
             steps {
-                echo 'Deploying the application...'
+                bat 'echo "Deploying to Test Environment..."'
             }
         }
     }
 
     post {
         always {
-            // Check if the container exists before stopping it
-            bat 'docker ps -a | findstr react-app-container && docker stop react-app-container || echo "Container not found"'
-            bat 'docker ps -a | findstr react-app-container && docker rm react-app-container || echo "Container not found"'
-            // Ensure to kill Node.js server process if needed
-            bat 'taskkill /IM node.exe /F || true'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }

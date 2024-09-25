@@ -29,10 +29,19 @@ pipeline {
         }
 
         stage('Code Quality Analysis') {
-            steps {
-                bat 'docker run --rm -v ${WORKSPACE}:/code codeclimate/codeclimate analyze'
-            }
+        steps {
+        script {
+            // Run CodeClimate analysis in Docker
+            bat '''
+            docker run --rm \
+                -v "%WORKSPACE%:/code" \
+                -e CODECLIMATE_CODE="$WORKSPACE" \
+                codeclimate/codeclimate analyze
+            '''
         }
+    }
+}
+
 
         stage('Deploy') {
             steps {

@@ -21,8 +21,8 @@ pipeline {
             steps {
                 // Start the app in the background on a specific port
                 bat 'START /B npm run start'
-                // Increase the timeout to allow the server to start up properly
-                bat 'timeout /t 30' // Increase to 30 seconds or more if needed
+                // Use ping to simulate a delay instead of timeout
+                bat 'ping 127.0.0.1 -n 30 > nul'
                 // Run Puppeteer tests
                 bat 'node src/puppeteerTest.js'
             }

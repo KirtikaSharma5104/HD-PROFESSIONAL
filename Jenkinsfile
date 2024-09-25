@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS' // Ensure this matches the name in Jenkins' Global Tool Configuration
+        nodejs 'NodeJS' // Ensure this matches the name given in Global Tool Configuration in Jenkins
     }
 
     stages {
@@ -17,31 +17,23 @@ pipeline {
                 bat 'npm run build'
             }
         }
-       stage('Test') {
-    steps {
-        // Start the app in the background
-        bat 'START /B npm run start'
-        
-        // Use ping as a delay workaround (pinging localhost 30 times, 1 second per ping)
-        bat 'ping 127.0.0.1 -n 30 > nul'
-
-        // Check if the server is running before running the tests
-        bat 'curl http://localhost:3000 || echo "Server not running!"'
-        
-        // Run Puppeteer tests
-        bat 'npm run puppeteer-test'
-    }
-}
-
+        stage('Test') {
+            steps {
+                // Start the app in the background on a specific port
+                bat 'START /B npm run start'
+                // Increase the timeout to allow the server to start up properly
+                bat 'timeout /t 30' // Increase to 30 seconds or more if needed
+                // Run Puppeteer tests
+                bat 'node src/puppeteerTest.js'
+            }
+        }
         stage('Docker Build') {
             steps {
-                // Build a Docker image for the app
                 bat 'docker build -t react-app-image .'
             }
         }
         stage('Run Docker Container') {
             steps {
-                // Run the Docker container
                 bat 'docker run -d -p 80:80 --name react-app-container react-app-image'
             }
         }
@@ -51,16 +43,13 @@ pipeline {
             }
         }
     }
-
     post {
         always {
-            // Clean up the Docker container
+            // Cleanup
             bat 'docker stop react-app-container || true'
             bat 'docker rm react-app-container || true'
-            
-            // Clean up Node.js server
+            // Ensure to kill Node.js server process if needed
             bat 'taskkill /IM node.exe /F || true'
         }
     }
 }
-

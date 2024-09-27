@@ -39,9 +39,11 @@ pipeline {
           }
 
 
-        stage('Deploy') {
+         stage('Deploy to Vercel') {
             steps {
-                bat 'echo "Deploying to Test Environment..."'
+                echo 'Deploying to Vercel...'
+                // Deploy to Vercel using your authentication token
+                bat 'vercel --prod --token YOUR_VERCEL_TOKEN'
             }
         }
     }

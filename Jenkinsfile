@@ -29,10 +29,13 @@ pipeline {
 
         stage('Code Quality Analysis') {
             steps {
-                script {
-                    // Ensure Docker is using TCP to connect, and pass the correct absolute path
+                withSonarQubeEnv('SonarQube') {
                     bat '''
-                    docker -H tcp://localhost:2375 run --rm -v "%WORKSPACE%:/code" codeclimate/codeclimate analyze
+                    sonar-scanner \
+                    -Dsonar.projectKey=YourProjectKey \
+                    -Dsonar.sources=./src \
+                    -Dsonar.host.url=http://localhost:9000 \
+                    -Dsonar.login=%SONAR_TOKEN%
                     '''
                 }
             }

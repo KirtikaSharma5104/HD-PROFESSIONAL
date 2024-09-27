@@ -32,13 +32,14 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     bat '''
                     sonar-scanner \
-                    -Dsonar.projectKey=HD-Professional-Project-Key
+                    -Dsonar.projectKey=HD-Professional-Project-Key \
                     -Dsonar.sources=./src \
                     -Dsonar.host.url=http://localhost:9000 \
-                    -Dsonar.login=%SONAR_TOKEN%
+                    -Dsonar.login=sqa_dc46729e1c0e5b5a14000cf0031cc31bf678aa47
                     '''
                 }
             }
+            
           }
 
 
